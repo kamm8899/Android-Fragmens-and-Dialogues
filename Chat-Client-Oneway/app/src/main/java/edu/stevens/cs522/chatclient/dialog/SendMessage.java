@@ -72,7 +72,10 @@ public class SendMessage extends DialogFragment {
         View rootView = inflater.inflate(R.layout.send_message, container, false);
 
         // TODO initialize the UI.
-
+        destinationHost = rootView.findViewById(R.id.destination_host);
+        chatroom = rootView.findViewById(R.id.chat_room);
+        chatName = rootView.findViewById(R.id.chat_name);
+        messageText = rootView.findViewById(R.id.message_text);
 
 
         // End todo
@@ -137,6 +140,7 @@ public class SendMessage extends DialogFragment {
             Log.d(TAG, String.format("...sending \"%s\" to %s as %s....", message, chatroomName, clientName));
 
             // TODO tell the activity to send the message
+            listener.send( destAddrString, chatroomName, clientName, message);
 
 
             Log.d(TAG, "...dismissing dialog.");
