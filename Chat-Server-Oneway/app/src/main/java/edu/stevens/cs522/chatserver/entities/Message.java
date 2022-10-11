@@ -22,18 +22,24 @@ import edu.stevens.cs522.base.DateUtils;
 // may trigger a linear search of this table.
 
 
+@Entity(foreignKeys = @ForeignKey(
+        //where does the ForeignKey live, in the Peer Class
+        entity=Peer.class, onDelete=ForeignKey.CASCADE,
+        //column name in parent table       column name in child table
+        parentColumns="name", childColumns="sender"),
+        indices = @Index("sender"))
 public class Message implements Parcelable {
 
-    // TODO annotate
-
+    // TODO primary key
+    @PrimaryKey(autoGenerate = true)
     public long id;
 
     public String chatroom;
 
     public String messageText;
 
-    // TODO annotate
-
+    // TODO Last time we heard from this peer.
+    @TypeConverters(DateConverter.class)
     public Date timestamp;
 
     public Double latitude;
@@ -45,17 +51,6 @@ public class Message implements Parcelable {
     public Message() {
     }
 
-    public Message(Parcel in) {
-        id = in.readLong();
-        chatroom = in.readString();
-        messageText = in.readString();
-        timestamp = DateUtils.readDate(in);
-        latitude = in.readDouble();
-        longitude = in.readDouble();
-        sender = in.readString();
-    }
-
-    @Override
     public String toString() {
         return messageText;
     }
@@ -65,6 +60,15 @@ public class Message implements Parcelable {
         return 0;
     }
 
+    public Message(Parcel in) {
+        id = in.readLong();
+        chatroom = in.readString();
+        messageText = in.readString();
+        timestamp = DateUtils.readDate(in);
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        sender = in.readString();
+    }
     @Override
     public void writeToParcel(Parcel out, int flags) {
         out.writeLong(id);
@@ -91,4 +95,3 @@ public class Message implements Parcelable {
     };
 
 }
-

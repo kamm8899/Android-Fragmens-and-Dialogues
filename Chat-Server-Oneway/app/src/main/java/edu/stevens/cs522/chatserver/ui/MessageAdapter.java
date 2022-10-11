@@ -73,12 +73,16 @@ public abstract class MessageAdapter extends RecyclerView.Adapter<MessageAdapter
 
         // TODO set the fields of the view for the message
         // Use getHeading() to get the heading in the message
-
+        Message messageToShow = messages.get(position);
+        //we have access to the ViewHolder for this row, which contains our textviews
+        viewHolder.setMetadata( getHeading(messageToShow) );
+        viewHolder.setMessage( messageToShow.messageText );
     }
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
+
         return messages.size();
     }
 
@@ -88,6 +92,7 @@ public abstract class MessageAdapter extends RecyclerView.Adapter<MessageAdapter
      * Invoked by live data observer.
      */
     public void setMessages(List<Message> messages) {
+
         this.messages = messages;
     }
 }

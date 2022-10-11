@@ -2,13 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:background="@color/design_default_color_background"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/messages_heading"
-        android:layout_height="wrap_content"
+        style="@style/textTitle"
         android:layout_width="match_parent"
-        style="@style/textTitle"/>
+        android:layout_height="wrap_content" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/message_list"
@@ -19,12 +20,12 @@
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/next_button"
+        style="@style/textButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:src="@drawable/ic_chat"
-        android:contentDescription="@string/next"
         android:layout_margin="16dp"
-        style="@style/textButton"/>
+        android:contentDescription="@string/next"
+        android:src="@drawable/ic_chat" />
 
 </LinearLayout>

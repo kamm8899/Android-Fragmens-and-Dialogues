@@ -21,12 +21,14 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stevens.cs522.chatserver.R;
@@ -35,6 +37,7 @@ import edu.stevens.cs522.chatserver.entities.Message;
 import edu.stevens.cs522.chatserver.ui.MessageAdapter;
 import edu.stevens.cs522.chatserver.ui.MessageSenderAdapter;
 import edu.stevens.cs522.chatserver.viewmodels.ChatViewModel;
+import edu.stevens.cs522.chatserver.viewmodels.ChatroomViewModel;
 import edu.stevens.cs522.chatserver.viewmodels.SharedViewModel;
 
 public class MessagesFragment extends Fragment implements OnClickListener {
@@ -76,9 +79,9 @@ public class MessagesFragment extends Fragment implements OnClickListener {
         }
     }
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -103,7 +106,8 @@ public class MessagesFragment extends Fragment implements OnClickListener {
         messageList.setLayoutManager(new LinearLayoutManager(requireActivity()));
 
         // TODO Initialize the recyclerview and adapter for messages
-
+        messagesAdapter = new MessageSenderAdapter();
+        messageList.setAdapter(messagesAdapter);
 
         return rootView;
     }
@@ -112,11 +116,19 @@ public class MessagesFragment extends Fragment implements OnClickListener {
         super.onViewCreated(view, savedInstanceState);
 
         // TODO get the view models
-
+        chatViewModel = new ViewModelProvider(getActivity()).get(ChatViewModel.class);
+        sharedViewModel = new ViewModelProvider(getActivity()).get(SharedViewModel.class);
 
         // Rely on live data to requery the messages if the chatroom selection changes
         queryMessages(sharedViewModel.getSelected());
-        sharedViewModel.observe(requireActivity(), this::queryMessages);
+        //Use observe to fire off query messages when the current chatroom is changed via the
+        //shared view model.
+        sharedViewModel.observe(getViewLifecycleOwner(), new Observer<Chatroom>() {
+            @Override
+            public void onChanged(Chatroom chatroom) {
+                queryMessages(chatroom);
+            }
+        });
     }
 
     private void queryMessages(Chatroom chatroom) {
@@ -132,9 +144,19 @@ public class MessagesFragment extends Fragment implements OnClickListener {
         // TODO query the database asynchronously, and use messagesAdapter to display the result
         // The messages live data will need an observer for when new messages are inserted.
 
+
+        //if someone adds a message to this chatroom while we're looking at it should it update live?
+        chatViewModel.fetchAllMessages(currentChatroom).observe(getViewLifecycleOwner(), new Observer<List<Message>>() {
+            @Override
+            public void onChanged(List<Message> messages) {
+                messagesAdapter.setMessages(messages);
+                messagesAdapter.notifyDataSetChanged();
+            }
+        });
+
     }
 
-	public void onResume() {
+    public void onResume() {
         super.onResume();
     }
 
@@ -152,5 +174,4 @@ public class MessagesFragment extends Fragment implements OnClickListener {
     public void onClick(View v) {
         listener.nextMessage();
     }
-
 }

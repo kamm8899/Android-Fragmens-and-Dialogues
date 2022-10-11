@@ -11,6 +11,7 @@ import android.widget.ListView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,6 +20,8 @@ import java.util.List;
 
 import edu.stevens.cs522.chatserver.R;
 import edu.stevens.cs522.chatserver.entities.Chatroom;
+import edu.stevens.cs522.chatserver.ui.MessageChatroomAdapter;
+import edu.stevens.cs522.chatserver.ui.MessageSenderAdapter;
 import edu.stevens.cs522.chatserver.ui.TextAdapter;
 import edu.stevens.cs522.chatserver.viewmodels.ChatroomViewModel;
 
@@ -75,8 +78,10 @@ public class ChatroomsFragment extends Fragment implements TextAdapter.OnItemCli
         RecyclerView chatroomList = rootView.findViewById(R.id.chatroom_list);
         chatroomList.setLayoutManager(new LinearLayoutManager(requireActivity()));
 
-        // TODO Initialize the recyclerview and adapter for messages
+        // TODO Initialize the recyclerview and adapter for chatrooms
+        chatroomsAdapter = new TextAdapter<>(chatroomList,this);
 
+        chatroomList.setAdapter(chatroomsAdapter);
 
         return rootView;
     }
@@ -92,9 +97,19 @@ public class ChatroomsFragment extends Fragment implements TextAdapter.OnItemCli
         }
 
         // TODO initialize the chatroom view model
-
-
+        chatroomViewModel = new ViewModelProvider(this).get(ChatroomViewModel.class);
         // TODO query the database asynchronously, and use messagesAdapter to display the result
+
+        chatroomViewModel.fetchAllChatrooms().observe(getViewLifecycleOwner(), new Observer<List<Chatroom>>() {
+            @Override
+            public void onChanged(List<Chatroom> chatrooms) {
+                chatroomsAdapter.setDataset(chatrooms);
+                chatroomsAdapter.notifyDataSetChanged();
+            }
+        });
+
+
+
 
     }
 
@@ -107,7 +122,7 @@ public class ChatroomsFragment extends Fragment implements TextAdapter.OnItemCli
     public void onItemClick(RecyclerView parent, View view, int position, Chatroom chatroom) {
         setActivatedPosition(position);
         // TODO ask the activity to respond to the selection (in single-pane layout, it will push detail fragment)
-
+        listener.setChatroom(chatroom);
     }
 
     @Override

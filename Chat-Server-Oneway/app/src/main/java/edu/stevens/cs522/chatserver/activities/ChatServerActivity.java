@@ -21,12 +21,14 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import java.io.StringReader;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.List;
 
 import edu.stevens.cs522.base.DatagramSendReceive;
 import edu.stevens.cs522.chatserver.R;
@@ -34,11 +36,14 @@ import edu.stevens.cs522.chatserver.databases.ChatDatabase;
 import edu.stevens.cs522.chatserver.entities.Chatroom;
 import edu.stevens.cs522.chatserver.entities.Message;
 import edu.stevens.cs522.chatserver.entities.Peer;
+import edu.stevens.cs522.chatserver.viewmodels.ChatroomViewModel;
 import edu.stevens.cs522.chatserver.viewmodels.SharedViewModel;
+
+//You cant get any results from the database query if there is no OBSERVER for that call
 
 public class ChatServerActivity extends AppCompatActivity implements ChatroomsFragment.IChatroomListener, MessagesFragment.IChatListener {
 
-	final static public String TAG = ChatServerActivity.class.getCanonicalName();
+    final static public String TAG = ChatServerActivity.class.getCanonicalName();
 
     public final static String SENDER_NAME = "name";
 
@@ -71,29 +76,28 @@ public class ChatServerActivity extends AppCompatActivity implements ChatroomsFr
      */
     private ChatDatabase chatDatabase;
 
-
     /*
-	 * Socket used both for sending and receiving.
-	 *
-	 * This should also be in a view model!
-	 */
+     * Socket used both for sending and receiving.
+     *
+     * This should also be in a view model!
+     */
     private DatagramSendReceive serverSocket;
 //  private DatagramSocket serverSocket;
 
 
     /*
-	 * True as long as we don't get socket errors
-	 */
-	private boolean socketOK = true;
-	
-	/*
-	 * Called when the activity is first created. 
-	 */
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+     * True as long as we don't get socket errors
+     */
+    private boolean socketOK = true;
 
-		Log.i(TAG, "(Re)starting ChatServer activity....");
+    /*
+     * Called when the activity is first created.
+     */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Log.i(TAG, "(Re)starting ChatServer activity....");
 
         /**
          * Let's be clear, this is a HACK to allow you to do network communication on the messages thread.
@@ -122,35 +126,42 @@ public class ChatServerActivity extends AppCompatActivity implements ChatroomsFr
          */
         setContentView(R.layout.chat_activity);
 
+        //There is a boolean variables xml file that has two versions
+        //one for landscape where is_two_pane is true
+        //and one for portrait where is_two_pane is false
+        //this line grabs the value from the resource file
         isTwoPane = getResources().getBoolean(R.bool.is_two_pane);
 
         if (!isTwoPane) {
             // Add an index fragment as the fragment in the frame layout (single-pane layout)
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(R.id.fragment_container, new ChatroomsFragment(),SHOWING_CHATROOMS_TAG)
+                    .add(R.id.fragment_container, new ChatroomsFragment(), SHOWING_CHATROOMS_TAG)
                     // Don't add this (why not?): .addToBackStack(SHOWING_CHATROOMS_TAG)
                     .commit();
         }
 
         // TODO get shared view model for current chatroom
+        //use the ViewModelProvider so it keeps track of whether or not this view model was created yet
+        sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
+
 
 
         // TODO get database reference (for insertions)
+        chatDatabase = ChatDatabase.getInstance(this);
+    }
 
-	}
-
-	@Override
+    @Override
     /**
      * Called by the MessagesFragment to get the next message (synchronously!)
      */
     public void nextMessage() {
-		
-		byte[] receiveData = new byte[1024];
 
-		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        byte[] receiveData = new byte[1024];
 
-		try {
+        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
+        try {
 
             String sender = null;
 
@@ -239,9 +250,11 @@ public class ChatServerActivity extends AppCompatActivity implements ChatroomsFr
             message.longitude = longitude;
 
             /*
-			 * TODO upsert chatroom and peer, and insert message into the database
-			 */
-
+             * TODO upsert chatroom and peer, and insert message into the database
+             */
+            chatDatabase.peerDao().upsert(peer);
+            chatDatabase.messageDao().persist(message);
+            chatDatabase.chatroomDao().insert(chatroom);
             /*
              * End TODO
              *
@@ -254,30 +267,30 @@ public class ChatServerActivity extends AppCompatActivity implements ChatroomsFr
             String updateMessage = getString(R.string.message_received, message.chatroom);
             Toast.makeText(this, updateMessage, Toast.LENGTH_LONG).show();
 
-		} catch (Exception e) {
-			
-			Log.e(TAG, "Problems receiving packet: " + e.getMessage(), e);
-			socketOK = false;
-		} 
+        } catch (Exception e) {
 
-	}
+            Log.e(TAG, "Problems receiving packet: " + e.getMessage(), e);
+            socketOK = false;
+        }
 
-	/*
-	 * Close the socket before exiting application
-	 */
-	public void closeSocket() {
-	    if (serverSocket != null) {
+    }
+
+    /*
+     * Close the socket before exiting application
+     */
+    public void closeSocket() {
+        if (serverSocket != null) {
             serverSocket.close();
             serverSocket = null;
         }
-	}
+    }
 
-	/*
-	 * If the socket is OK, then it's running
-	 */
-	boolean socketIsOK() {
-		return socketOK;
-	}
+    /*
+     * If the socket is OK, then it's running
+     */
+    boolean socketIsOK() {
+        return socketOK;
+    }
 
     public void onDestroy() {
         super.onDestroy();
@@ -302,8 +315,8 @@ public class ChatServerActivity extends AppCompatActivity implements ChatroomsFr
         if (itemId == R.id.peers) {
             // TODO PEERS provide the UI for viewing list of peers
             // The subactivity will query the database for the list of peers.
-
-
+            Intent i = new Intent(this, ViewPeersActivity.class );
+            startActivity(i);
 
         }
         return false;
@@ -316,11 +329,21 @@ public class ChatServerActivity extends AppCompatActivity implements ChatroomsFr
      * For two-pane UI, do nothing, but for single-pane, need to push the detail fragment.
      */
     public void setChatroom(Chatroom chatroom) {
+        //the shared view model has live data in it, so when we select a new chatroom
+        //that live data will change and the MESSAGES FRAGMENT should be observing that value
+        //which means in LANDSCAPE MODE the messages fragment will update when you click on a chatroom
+        //because the live data changed
         sharedViewModel.select(chatroom);
         if (!isTwoPane) {
             // TODO For single pane, replace chatrooms fragment with messages fragment.
             // Add chatrooms fragment to backstack, so pressing BACK key will return to index.
-
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.fragment_container, new MessagesFragment(), SHOWING_MESSAGES_TAG)
+                    //add to back stack so this fragment gets stacked on top of the other one
+                    //and the back button goes back to the chatrooms list
+                    .addToBackStack(SHOWING_MESSAGES_TAG)
+                    .commit();
         }
     }
 

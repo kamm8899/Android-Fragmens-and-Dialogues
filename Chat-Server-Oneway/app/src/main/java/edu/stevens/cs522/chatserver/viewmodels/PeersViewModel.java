@@ -11,34 +11,38 @@ import java.util.List;
 import edu.stevens.cs522.chatserver.databases.ChatDatabase;
 import edu.stevens.cs522.chatserver.entities.Peer;
 
-public class PeersViewModel extends AndroidViewModel {
 
-    private static final String TAG = PeersViewModel.class.getCanonicalName();
+    public class PeersViewModel extends AndroidViewModel {
 
-    private ChatDatabase chatDatabase;
+        private static final String TAG = PeersViewModel.class.getCanonicalName();
 
-    private LiveData<List<Peer>> peers;
+        private ChatDatabase chatDatabase;
 
-    public PeersViewModel(Application context) {
-        super(context);
-        Log.d(TAG, "Getting database in PeerViewModel");
-        chatDatabase = ChatDatabase.getInstance(context);
+        private LiveData<List<Peer>> peers;
+
+        public PeersViewModel(Application context) {
+            super(context);
+            Log.d(TAG, "Getting database in PeerViewModel");
+            chatDatabase = ChatDatabase.getInstance(context);
+        }
+
+        // TODO finish this
+        public LiveData<List<Peer>> fetchAllPeers() {
+            if (peers == null) {
+                peers = loadPeers();
+            }
+            return peers;
+        }
+
+        // TODO finish this
+        private LiveData<List<Peer>> loadPeers() {
+            return chatDatabase.peerDao().fetchAllPeers();
+        }
+
+        @Override
+        public void onCleared() {
+            super.onCleared();
+            Log.d(TAG, "Clearing PeersViewodel...");
+            chatDatabase = null;
+        }
     }
-
-    // TODO finish this
-    public LiveData<List<Peer>> fetchAllPeers() {
-        return null;
-    }
-
-    // TODO finish this
-    private LiveData<List<Peer>> loadPeers() {
-        return null;
-    }
-
-    @Override
-    public void onCleared() {
-        super.onCleared();
-        Log.d(TAG, "Clearing PeersViewodel...");
-        chatDatabase = null;
-    }
-}
