@@ -17,7 +17,7 @@ import edu.stevens.cs522.chatserver.entities.Peer;
  *
  * See build.gradle file for app for where schema file is left after processing.
  */
-
+@Database(entities={Peer.class,Message.class, Chatroom.class}, version=1)
 // TODO Add annotations (including @TypeConverters)
 public abstract class ChatDatabase extends RoomDatabase {
 

@@ -11,15 +11,22 @@ import edu.stevens.cs522.chatserver.entities.Message;
 
 // TODO add annotations for Repository pattern
 
+@Dao
 public interface MessageDao {
 
 
+    @Query("SELECT * FROM message WHERE chatroom = :chatroom")
     public abstract LiveData<List<Message>> fetchAllMessages(String chatroom);
 
-
+    @Query("SELECT * FROM message WHERE sender = :peerName")
     public LiveData<List<Message>> fetchMessagesFromPeer(String peerName);
 
-
+    /**
+     * Add a new message to the database.
+     * @param message
+     */
+    @Insert
     public void persist(Message message);
 
 }
+
