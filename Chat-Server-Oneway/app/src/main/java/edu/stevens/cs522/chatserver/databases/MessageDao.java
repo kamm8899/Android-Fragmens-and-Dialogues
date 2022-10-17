@@ -10,7 +10,6 @@ import java.util.List;
 import edu.stevens.cs522.chatserver.entities.Message;
 
 // TODO add annotations for Repository pattern
-
 @Dao
 public interface MessageDao {
 
@@ -29,4 +28,3 @@ public interface MessageDao {
     public void persist(Message message);
 
 }
-

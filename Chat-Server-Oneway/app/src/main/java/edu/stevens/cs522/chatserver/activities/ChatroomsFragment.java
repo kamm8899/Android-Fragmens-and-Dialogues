@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
@@ -99,7 +100,8 @@ public class ChatroomsFragment extends Fragment implements TextAdapter.OnItemCli
         // TODO initialize the chatroom view model
         chatroomViewModel = new ViewModelProvider(this).get(ChatroomViewModel.class);
         // TODO query the database asynchronously, and use messagesAdapter to display the result
-
+        //when using an observer in a fragment you have to get the View that owns this fragments lifecycle
+        //in this case our ChatServerActivity, but just let java figure it out with getViewLifecycleOwner()
         chatroomViewModel.fetchAllChatrooms().observe(getViewLifecycleOwner(), new Observer<List<Chatroom>>() {
             @Override
             public void onChanged(List<Chatroom> chatrooms) {

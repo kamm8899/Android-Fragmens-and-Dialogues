@@ -20,7 +20,6 @@ import edu.stevens.cs522.chatserver.entities.Peer;
  * We will continue to allow insertion to be done on main thread for noew.
  */
 @Dao
-
 public abstract class PeerDao {
 
     /**
@@ -43,6 +42,7 @@ public abstract class PeerDao {
      * @param peer
      * @return
      */
+    //when you insert
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     protected abstract void insert(Peer peer);
 
@@ -62,6 +62,7 @@ public abstract class PeerDao {
      */
     public void upsert(Peer peer) {
         // TODO
+        //see if the peer already exists, if they do then just update instead of inserting new
         long id = getPeerId(peer.name);
         if (id == 0) {
             insert(peer);
@@ -69,5 +70,6 @@ public abstract class PeerDao {
             //peer.id = id;
             update(peer);
         }
+
     }
 }

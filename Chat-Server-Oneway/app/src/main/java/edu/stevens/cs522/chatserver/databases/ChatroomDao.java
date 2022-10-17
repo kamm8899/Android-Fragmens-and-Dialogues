@@ -19,6 +19,7 @@ public abstract class ChatroomDao {
     @Query("SELECT * FROM Chatroom")
     public abstract LiveData<List<Chatroom>> fetchAllChatrooms();
 
+    //does not allow duplicate entries in the table
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     public abstract void insert(Chatroom chatroom);
 
